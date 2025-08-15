@@ -80,25 +80,41 @@ export function ChatInterface({ selectedPersona }) {
   const handleKeyPress = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
-      handleSendMessage()
+      handleStreamChat()
     }
   }
 
   
     const handleStreamChat = async ()=>{
+      if (inputMessage.trim() === '' || !selectedPersona) return
       setStreming(true)
       try {
+        const newMessage = {
+          id: Date.now().toString(),
+          content: inputMessage,
+          isUser: true,
+          timestamp: new Date()
+        }
+
+        setMessages(prev => [...prev, newMessage])
+        setInputMessage('')
+        setIsLoading(true)
+
         const res = await fetch("api/chat-stream",{
           method : "POST",
           headers : {
             "Content-Type" : "application/json"
           },
-          body : JSON.stringify({message : inputMessage})
+          body : JSON.stringify({
+            persona : selectedPersona.name.toLowerCase(),
+            message : inputMessage
+          })
         })
   
         const reader = res.body.getReader()
   
         const decoder = new TextDecoder()
+        let finalResponse = "";
   
         while(true){
           const {done,value} = await reader.read()
@@ -107,12 +123,25 @@ export function ChatInterface({ selectedPersona }) {
           const chunk = decoder.decode(value)
           const lines = chunk.split("\n")
           for(const line of lines){
-            if(line.startsWith("data : ")){
+            if(line.startsWith("data :")){
               const data = JSON.parse(line.slice(6))
+              finalResponse += data.content;
               setStreamResponse((prev) => prev + data.content)
             }
           }
         }
+
+        const aiResponse = {
+          id: (Date.now() + 1).toString(),
+          content: finalResponse,
+          isUser: false,
+          timestamp: new Date(),
+          avatar: selectedPersona.avatar
+        }
+
+        setMessages(prev => [...prev, aiResponse])
+        setIsLoading(false)
+
       } catch (error) {
         setStreamResponse("error : " + error.message)
       }
@@ -224,7 +253,7 @@ export function ChatInterface({ selectedPersona }) {
                   className="p-2 sm:p-3"
                   disabled={isLoading}
                 >
-                  <Mic size={16} className="sm:w-5 sm:h-5" />
+                  
                 </Button>
               </div>
             </Card>
