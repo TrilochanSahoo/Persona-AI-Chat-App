@@ -9,10 +9,14 @@ import { personas } from "../data/personas"
 
 export default function Home() {
   const [selectedPersona, setSelectedPersona] = useState(null)
+  const [streaming,setStreming] = useState("")
+  const [streamResponse, setStreamResponse] = useState("")
+  const [loading, setLoading] = useState("")
 
   const handlePersonaSelect = (persona) => {
     setSelectedPersona(persona)
   }
+
 
   return (
     <div className="min-h-screen flex flex-col">

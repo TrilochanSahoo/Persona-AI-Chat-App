@@ -85,23 +85,7 @@ export function PersonaCard({ persona, isSelected, onSelect }) {
               <span className="hidden sm:inline">Message</span>
             </Button>
             
-            <div className="flex gap-2 sm:gap-3">
-              <Button
-                variant={isDark ? "secondary" : "outline"}
-                size="sm"
-                className="flex-1 sm:flex-none"
-              >
-                <Phone size={16} />
-              </Button>
-              
-              <Button
-                variant={isDark ? "secondary" : "outline"}
-                size="sm"
-                className="flex-1 sm:flex-none"
-              >
-                <Calendar size={16} />
-              </Button>
-            </div>
+            
           </div>
         </div>
       </Card>

@@ -15,6 +15,9 @@ export function ChatInterface({ selectedPersona }) {
   const [inputMessage, setInputMessage] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const messagesEndRef = useRef(null)
+  const [streaming,setStreming] = useState("")
+  const [streamResponse, setStreamResponse] = useState("")
+  const [loading, setLoading] = useState("")
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -81,6 +84,42 @@ export function ChatInterface({ selectedPersona }) {
     }
   }
 
+  
+    const handleStreamChat = async ()=>{
+      setStreming(true)
+      try {
+        const res = await fetch("api/chat-stream",{
+          method : "POST",
+          headers : {
+            "Content-Type" : "application/json"
+          },
+          body : JSON.stringify({message : inputMessage})
+        })
+  
+        const reader = res.body.getReader()
+  
+        const decoder = new TextDecoder()
+  
+        while(true){
+          const {done,value} = await reader.read()
+          if(done) break;
+  
+          const chunk = decoder.decode(value)
+          const lines = chunk.split("\n")
+          for(const line of lines){
+            if(line.startsWith("data : ")){
+              const data = JSON.parse(line.slice(6))
+              setStreamResponse((prev) => prev + data.content)
+            }
+          }
+        }
+      } catch (error) {
+        setStreamResponse("error : " + error.message)
+      }
+  
+      setLoading(false)
+    }
+
   if (!selectedPersona) {
     return (
       <motion.div
@@ -140,6 +179,7 @@ export function ChatInterface({ selectedPersona }) {
             {messages.map((message, index) => (
               <ChatMessage key={message.id} message={message} index={index} />
             ))}
+            {streamResponse}
           </AnimatePresence>
           {isLoading && (
             <motion.div
@@ -189,7 +229,7 @@ export function ChatInterface({ selectedPersona }) {
               </div>
             </Card>
             <Button
-              onClick={handleSendMessage}
+              onClick={handleStreamChat}
               disabled={isLoading || inputMessage.trim() === ''}
               className="px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base"
             >
